@@ -1,144 +1,283 @@
-// A C++ program to find single source longest distances in a DAG
 #include <iostream>
-#include <list>
-#include <stack>
-#include <limits.h>
-#define NINF INT_MIN
+#include <random>
+
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/bellman_ford_shortest_paths.hpp>
+#include <boost/graph/topological_sort.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/graph/depth_first_search.hpp>
+
 using namespace std;
+using namespace boost;
 
-// Graph is represented using adjacency list. Every node of adjacency list
-// contains vertex number of the vertex to which edge connects. It also
-// contains weight of the edge
-class AdjListNode
+class cVertex
 {
-	int v;
-	int weight;
-public:
-	AdjListNode(int _v, int _w) { v = _v; weight = _w;}
-	int getV()	 { return v; }
-	int getWeight() { return weight; }
+
 };
 
-// Class to represent a graph using adjacency list representation
-class Graph
+class cEdge
 {
-	int V; // No. of vertices’
-
-	// Pointer to an array containing adjacency lists
-	list<AdjListNode> *adj;
-
-	// A function used by longestPath
-	void topologicalSortUtil(int v, bool visited[], stack<int> &Stack);
 public:
-	Graph(int V); // Constructor
+    void Weight( int w )
+    {
+        myWeight = w;
+    }
+    int Weight()
+    {
+        return myWeight;
+    }
+    void negWeight()
+    {
+        myWeight = - myWeight;
+    }
 
-	// function to add an edge to graph
-	void addEdge(int u, int v, int weight);
-
-	// Finds longest distances from given source vertex
-	void longestPath(int s);
+    int myWeight;
 };
 
-Graph::Graph(int V) // Constructor
+typedef adjacency_list<
+vecS, vecS,  directedS,
+      cVertex, cEdge  > graph_t;
+typedef graph_traits< graph_t >::vertex_iterator vit_t;
+typedef graph_traits< graph_t >::edge_iterator eit_t;
+typedef graph_traits< graph_t >::edge_descriptor ed_t;
+
+graph_t theGraph;
+
+class cPredecessorMap
 {
-	this->V = V;
-	adj = new list<AdjListNode>[V];
+public:
+
+    cPredecessorMap(graph_t& g )
+        : myGraph( g )
+    {
+        p.resize( num_vertices(myGraph) );
+    }
+    vector<int>::iterator
+    begin()
+    {
+        return p.begin();
+    }
+
+    vector<int>
+    Path( int start, int end )
+    {
+
+        vector<int> path ;
+        int next = end;
+        while ( next != start )
+        {
+            path.push_back( next );
+            next = p[ next ];
+        }
+        path.push_back( start );
+
+        // reverse into path from to
+        reverse(path.begin(),path.end());
+
+        return path;
+    }
+private:
+    graph_t& myGraph;
+    vector<int> p;
+
+};
+
+void Add( int src, int dst, int weight )
+{
+    theGraph[add_edge( src, dst, theGraph ).first].Weight( weight );
 }
 
-void Graph::addEdge(int u, int v, int weight)
+void Construct()
 {
-	AdjListNode node(v, weight);
-	adj[u].push_back(node); // Add v to u’s list
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<int> dis(0,9);
+    for( int kvertex = 0; kvertex < 10; kvertex++ )
+        add_vertex( theGraph );
+    // connect successive vertices with random weights
+    for( int kvertex = 1; kvertex < 10; kvertex++ )
+        Add( kvertex-1, kvertex, dis( gen ) );
+    // connect random edges
+    for( int krandom = 0; krandom < 3; krandom++ )
+    {
+        int v1, v2;
+        do
+        {
+            v1 = dis(gen);
+            v2 = dis(gen);
+        }
+        while( v1 == v2 );
+        if( v1 > v2 )
+        {
+            int tmp;
+            tmp = v1;
+            v1 = v2;
+            v2 = tmp;
+        }
+        Add( dis(gen), dis(gen), dis( gen ));
+    }
+}
+void Construct2()
+{
+    for( int kvertex = 0; kvertex < 3; kvertex++ )
+        add_vertex( theGraph );
+
+    Add( 0, 1, 1 );
+    Add( 0, 2, 2 );
+    Add( 1, 2, 3 );
 }
 
-// A recursive function used by longestPath. See below link for details
-// http://www.geeksforgeeks.org/topological-sorting/
-void Graph::topologicalSortUtil(int v, bool visited[], stack<int> &Stack)
+void Construct3()
 {
-	// Mark the current node as visited
-	visited[v] = true;
+    for( int kvertex = 0; kvertex < 3; kvertex++ )
+        add_vertex( theGraph );
 
-	// Recur for all the vertices adjacent to this vertex
-	list<AdjListNode>::iterator i;
-	for (i = adj[v].begin(); i != adj[v].end(); ++i)
-	{
-		AdjListNode node = *i;
-		if (!visited[node.getV()])
-			topologicalSortUtil(node.getV(), visited, Stack);
-	}
-
-	// Push current vertex to stack which stores topological sort
-	Stack.push(v);
+    Add( 0, 1, 1 );
+    Add( 0, 2, 3 );
+    Add( 1, 2, 3 );
 }
 
-// The function to find longest distances from a given vertex. It uses
-// recursive topologicalSortUtil() to get topological sorting.
-void Graph::longestPath(int s)
+void ConstructWithCycle()
 {
-	stack<int> Stack;
-	int dist[V];
-
-	// Mark all the vertices as not visited
-	bool *visited = new bool[V];
-	for (int i = 0; i < V; i++)
-		visited[i] = false;
-
-	// Call the recursive helper function to store Topological Sort
-	// starting from all vertices one by one
-	for (int i = 0; i < V; i++)
-		if (visited[i] == false)
-			topologicalSortUtil(i, visited, Stack);
-
-	// Initialize distances to all vertices as infinite and distance
-	// to source as 0
-	for (int i = 0; i < V; i++)
-		dist[i] = NINF;
-	dist[s] = 0;
-
-	// Process vertices in topological order
-	while (Stack.empty() == false)
-	{
-		// Get the next vertex from topological order
-		int u = Stack.top();
-		Stack.pop();
-
-		// Update distances of all adjacent vertices
-		list<AdjListNode>::iterator i;
-		if (dist[u] != NINF)
-		{
-		for (i = adj[u].begin(); i != adj[u].end(); ++i)
-			if (dist[i->getV()] < dist[u] + i->getWeight())
-				dist[i->getV()] = dist[u] + i->getWeight();
-		}
-	}
-
-	// Print the calculated longest distances
-	for (int i = 0; i < V; i++)
-		(dist[i] == NINF)? cout << "INF ": cout << dist[i] << " ";
+    for( int kvertex = 0; kvertex < 10; kvertex++ )
+        add_vertex( theGraph );
+    // connect successive vertices with random weights
+    for( int kvertex = 1; kvertex < 10; kvertex++ )
+        Add( kvertex-1, kvertex, 1 );
+    Add( 6, 4, 1 );
+    Add( 7, 3, 1 );
 }
 
-// Driver program to test above functions
+void DisplayEdges()
+{
+    graph_traits<graph_t>::edge_iterator ei, ei_end;
+    for (boost::tie(ei, ei_end) = edges(theGraph); ei != ei_end; ++ei)
+    {
+        std::cout << "(" << source(*ei, theGraph)
+                  << "," << target(*ei, theGraph)
+                  << ", w= " << theGraph[ *ei ].Weight()
+                  << " )\n ";
+
+    }
+    std::cout << std::endl;
+}
+
+bool TopSort()
+{
+    try
+    {
+        std::vector< int > c;
+        topological_sort(theGraph, std::back_inserter(c));
+    }
+    catch( not_a_dag )
+    {
+        cout << "not a dag\n";
+        return false;
+    }
+    cout << "top sort OK\n";
+    return true;
+}
+/* Find longest path through the graph
+    @param[in] g the graph
+    @param[in] start vertex
+    @param[in] end vertex
+    @param[out] path of vertices
+    @param[out] dist length of path
+*/
+void Longest(
+    graph_t& g,
+    int start,
+    int end,
+    vector<int>& path,
+    int& dist )
+{
+    // create copy of graph with negative weights
+    graph_t negGraph = g;
+    graph_traits<graph_t>::edge_iterator ei, ei_end;
+    for (boost::tie(ei, ei_end) = edges(negGraph); ei != ei_end; ++ei)
+    {
+        negGraph[ *ei ].negWeight( );
+    }
+
+    // find shortest paths through negative weight graph
+    int N = num_vertices(negGraph);
+    cPredecessorMap pmap( theGraph );
+    vector<int> distance(N);
+    bellman_ford_shortest_paths(
+        negGraph,
+        N,
+        weight_map(get(&cEdge::myWeight, negGraph))
+        .predecessor_map(make_iterator_property_map(pmap.begin(), get(vertex_index, negGraph)))
+        .distance_map(&distance[0])
+        .root_vertex( start )
+    );
+
+    path = pmap.Path(start,end);
+
+    dist = - distance[ end ];
+}
+
+class dag_visitor:public default_dfs_visitor
+{
+
+public:
+    unsigned int * src;
+    unsigned int * dst;
+    template < typename Edge, typename Graph >
+    void back_edge( Edge e, Graph& g)
+    {
+        *src = source( e, g );
+        *dst = target( e, g );
+        throw runtime_error("cyclic");
+    }
+};
+
+void ConvertToDAG( graph_t& g)
+{
+    dag_visitor vis;
+    unsigned int src, dst;
+    vis.src = &src;
+    vis.dst = &dst;
+    bool cyclic = true;
+    while( cyclic )
+    {
+        try
+        {
+            depth_first_search(g, visitor(vis));
+            cyclic = false;
+        }
+        catch( runtime_error& e )
+        {
+            cyclic = true;
+             cout << "removing " << src << " -> " << dst << endl;
+            remove_edge( src, dst, g );
+        }
+    }
+
+}
 int main()
 {
-	// Create a graph given in the above diagram. Here vertex numbers are
-	// 0, 1, 2, 3, 4, 5 with following mappings:
-	// 0=r, 1=s, 2=t, 3=x, 4=y, 5=z
-	Graph g(6);
-	g.addEdge(0, 1, 5);
-	g.addEdge(0, 2, 3);
-	g.addEdge(1, 3, 6);
-	g.addEdge(1, 2, 2);
-	g.addEdge(1, 4, 4);
-	//g.addEdge(2, 5, 2);
-	g.addEdge(2, 3, 7);
-	g.addEdge(3, 5, 1);
-	g.addEdge(3, 4, 2);
-	g.addEdge(4, 5, 3);
 
-	int s = 0;
-	cout << "Following are longest distances from source vertex " << s <<" \n";
-	g.longestPath(s);
-    cout<<endl;
-	return 0;
+    //ConstructWithCycle();
+    Construct3();
+
+    // create copy to be converted to DAG
+    graph_t dag( theGraph );
+    ConvertToDAG( dag );
+
+    // find longest path from first to last vertex
+    vector< int > path;
+    int dist;
+    Longest( dag, 0, 9, path, dist );
+
+    DisplayEdges();
+    cout << "Longest path: ";
+    for( int v : path )
+        cout << v << " ";
+    cout << " length " << dist << endl;
+
+
+    return 0;
 }
-
