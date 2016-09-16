@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include<time.h>
 
 void error(const char *msg)
 {
@@ -18,8 +19,11 @@ int main(int argc, char *argv[])
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-
+    clock_t t1;    
     char buffer[256];
+
+    t1 = clock();
+
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
@@ -54,5 +58,7 @@ int main(int argc, char *argv[])
          error("ERROR reading from socket");
     printf("%s\n",buffer);
     close(sockfd);
+
+    printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
     return 0;
 }
