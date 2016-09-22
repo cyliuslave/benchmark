@@ -14,6 +14,9 @@ void error(const char *msg)
     exit(0);
 }
 
+#define N 2000
+#define M 2000
+
 int main(int argc, char *argv[])
 {
     int sockfd, portno, n;
@@ -21,8 +24,8 @@ int main(int argc, char *argv[])
     struct hostent *server;
     clock_t t1;    
     char buffer[256];
-
-    t1 = clock();
+    double result=0;
+    int i,j,k;
 
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
@@ -53,12 +56,20 @@ int main(int argc, char *argv[])
     if (n < 0) 
          error("ERROR writing to socket");
     bzero(buffer,256);
+
+    t1 = clock();
+    for(i=0;i<M;i++){
+       for(j=0;j<N;j++){
+          result = i*j + j;
+       }
+    }
+    printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
+
     n = read(sockfd,buffer,255);
     if (n < 0) 
          error("ERROR reading from socket");
     printf("%s\n",buffer);
     close(sockfd);
 
-    printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
     return 0;
 }
