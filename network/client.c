@@ -15,7 +15,7 @@ void error(const char *msg)
 }
 
 #define N 2000
-#define M 2000
+#define M 1000
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
          error("ERROR writing to socket");
     bzero(buffer,256);
 
-    t1 = clock();
     n = read(sockfd,buffer,255);
     if (n < 0) 
          error("ERROR reading from socket");
