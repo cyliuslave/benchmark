@@ -58,13 +58,6 @@ int main(int argc, char *argv[])
     bzero(buffer,256);
 
     t1 = clock();
-    for(i=0;i<M;i++){
-       for(j=0;j<N;j++){
-          result = i*j + j;
-       }
-    }
-    printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
-
     n = read(sockfd,buffer,255);
     if (n < 0) 
          error("ERROR reading from socket");

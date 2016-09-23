@@ -7,6 +7,12 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include<time.h>
+
+
+#define N 2000
+#define M 2000
+
 
 void error(const char *msg)
 {
@@ -20,6 +26,10 @@ int main(int argc, char *argv[])
      socklen_t clilen;
      char buffer[256];
      struct sockaddr_in serv_addr, cli_addr;
+     double result=0;
+     int i,j,k;
+    clock_t t1;  
+
      int n;
      if (argc < 2) {
          fprintf(stderr,"ERROR, no port provided\n");
@@ -46,7 +56,17 @@ int main(int argc, char *argv[])
              error("ERROR on accept");
         bzero(buffer,256);
         n = read(newsockfd,buffer,255);
+        t1 = clock();
         if (n < 0) error("ERROR reading from socket");
+
+        for(i=0;i<M;i++){
+           for(j=0;j<N;j++){
+              result = i*j + j;
+           }
+        }
+        printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
+
+
         printf("Here is the message: %s\n",buffer);
         n = write(newsockfd,"I got your message",18);
         if (n < 0) error("ERROR writing to socket");
