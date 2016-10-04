@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
      struct sockaddr_in serv_addr, cli_addr;
      double result=0;
      int i,j,k;
-    clock_t t1;  
+    clock_t t1; 
+   char bOnce=0; 
     unsigned int N=1,M=1;
      int n;
      if (argc < 4) {
@@ -63,6 +64,10 @@ int main(int argc, char *argv[])
              error("ERROR on accept");
         bzero(buffer,256);
         n = read(newsockfd,buffer,size_buffer);
+        if(buffer[0]=='E'){
+            bOnce=1; 
+        }
+        printf("expect %u, read %d \n", size_buffer, n );
         t1 = clock();
         if (n < 0) error("ERROR reading from socket");
 
@@ -78,7 +83,8 @@ int main(int argc, char *argv[])
         n = write(newsockfd,"I got your message",255);
         if (n < 0) error("ERROR writing to socket");
         close(newsockfd);
-    }while(0);
+    }while(!bOnce);
     close(sockfd);
+    free(buffer);
     return 0; 
 }
