@@ -63,7 +63,8 @@ int main(int argc, char *argv[])
              error("ERROR on accept");
 
         buffer = (char*) malloc(size_buffer);
-        bzero(buffer,256);
+        
+	//bzero(buffer,256);
         do{
             n = read(newsockfd,buffer,size_buffer);
             if(buffer[0]=='E'){
@@ -82,7 +83,8 @@ int main(int argc, char *argv[])
 
 
             printf("Here is the message: %s\n",buffer);
-            n = write(newsockfd,"I got your message",255);
+	    sprintf(buffer,"I got your message\n");
+            n = write(newsockfd,buffer,size_buffer);
             if (n < 0){
                 error("ERROR writing to socket");
             }

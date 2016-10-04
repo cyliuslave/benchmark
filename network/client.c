@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
              error("ERROR writing to socket");
         bzero(buffer,size_buffer);
 
-        n = read(sockfd,buffer,255);
+        n = read(sockfd,buffer,size_buffer);
         if (n < 0) 
              error("ERROR reading from socket");
         printf("%s\n",buffer);
