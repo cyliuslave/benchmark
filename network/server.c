@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
      int sockfd, newsockfd, portno;
      socklen_t clilen;
     char *buffer;
-    unsigned size_buffer=1;
+    unsigned int size_buffer=1;
 
      struct sockaddr_in serv_addr, cli_addr;
      double result=0;

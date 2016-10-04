@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     struct hostent *server;
     clock_t t1;    
     char *buffer;
-    unsigned size_buffer=1;
+    unsigned int size_buffer=1;
     double result=0;
     int i,j,k;
     
