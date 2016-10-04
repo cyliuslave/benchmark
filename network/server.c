@@ -8,10 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include<time.h>
-
-
-#define N 2000
-#define M 2000
+#include<math.h>
 
 
 void error(const char *msg)
@@ -29,10 +26,10 @@ int main(int argc, char *argv[])
      double result=0;
      int i,j,k;
     clock_t t1;  
-
+    unsigned int N=1,M=1;
      int n;
-     if (argc < 2) {
-         fprintf(stderr,"ERROR, no port provided\n");
+     if (argc < 3) {
+         fprintf(stderr,"Usage : ./server port matrix_width(sqrt(i*j+j*0.01)\n");
          exit(1);
      }
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -40,6 +37,8 @@ int main(int argc, char *argv[])
         error("ERROR opening socket");
      bzero((char *) &serv_addr, sizeof(serv_addr));
      portno = atoi(argv[1]);
+     N = atoi(argv[2]);
+     M = atoi(argv[2]);
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
      serv_addr.sin_port = htons(portno);
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
 
         for(i=0;i<M;i++){
            for(j=0;j<N;j++){
-              result = i*j + j;
+              result = sqrt(i*j + j*0.001);
            }
         }
         printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
