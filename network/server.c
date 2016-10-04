@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
         printf("buffer size should be equal or larger than 255\n");    
         return -1;
     }
-    buffer = (char*) malloc(size_buffer);
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
      serv_addr.sin_port = htons(portno);
@@ -62,28 +61,34 @@ int main(int argc, char *argv[])
                     &clilen);
         if (newsockfd < 0) 
              error("ERROR on accept");
+
+        buffer = (char*) malloc(size_buffer);
         bzero(buffer,256);
-        n = read(newsockfd,buffer,size_buffer);
-        if(buffer[0]=='E'){
-            bOnce=1; 
-        }
-        printf("expect %u, read %d \n", size_buffer, n );
-        t1 = clock();
-        if (n < 0) error("ERROR reading from socket");
+        do{
+            n = read(newsockfd,buffer,size_buffer);
+            if(buffer[0]=='E'){
+                bOnce=1; 
+            }
+            printf("expect %u, read %d \n", size_buffer, n );
+            t1 = clock();
+            if (n < 0) error("ERROR reading from socket");
 
-        for(i=0;i<M;i++){
-           for(j=0;j<N;j++){
-              result = sqrt(i*j + j*0.001);
-           }
-        }
-        printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
+            for(i=0;i<M;i++){
+               for(j=0;j<N;j++){
+                  result = sqrt(i*j + j*0.001);
+               }
+            }
+            printf("dt = %f\n",(clock()-t1)/(float)CLOCKS_PER_SEC);
 
 
-        printf("Here is the message: %s\n",buffer);
-        n = write(newsockfd,"I got your message",255);
-        if (n < 0) error("ERROR writing to socket");
+            printf("Here is the message: %s\n",buffer);
+            n = write(newsockfd,"I got your message",255);
+            if (n < 0){
+                error("ERROR writing to socket");
+            }
+        }while(!bOnce);
         close(newsockfd);
-    }while(!bOnce);
+    }while(0);
     close(sockfd);
     free(buffer);
     return 0; 

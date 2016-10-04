@@ -14,8 +14,6 @@ void error(const char *msg)
     exit(0);
 }
 
-#define N 2000
-#define M 1000
 
 int main(int argc, char *argv[])
 {
@@ -41,28 +39,31 @@ int main(int argc, char *argv[])
         printf("buffer size %u; it should be equal or larger than 255\n",size_buffer);    
         return -1;
     }
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+    server = gethostbyname(argv[1]);
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+        error("ERROR connecting");
+    printf("Please enter the message: ");
+
     buffer = (char*) malloc(size_buffer);
+    bzero(buffer,size_buffer);
     for(ns=0; ns<n_sends; ns++){
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) 
-            error("ERROR opening socket");
-        server = gethostbyname(argv[1]);
-        if (server == NULL) {
-            fprintf(stderr,"ERROR, no such host\n");
-            exit(0);
-        }
-        bzero((char *) &serv_addr, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        bcopy((char *)server->h_addr, 
-             (char *)&serv_addr.sin_addr.s_addr,
-             server->h_length);
-        serv_addr.sin_port = htons(portno);
-        if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-            error("ERROR connecting");
-        printf("Please enter the message: ");
-        bzero(buffer,size_buffer);
         sprintf(buffer,"I am a client\n");
-        if(n_sends==1){
+
+        if(ns==n_sends-1){
             buffer[0]='E';
         }
         //fgets(buffer,255,stdin);
@@ -76,8 +77,8 @@ int main(int argc, char *argv[])
         if (n < 0) 
              error("ERROR reading from socket");
         printf("%s\n",buffer);
-        close(sockfd);
     }
+    close(sockfd); 
     free(buffer);
     return 0;
 }
