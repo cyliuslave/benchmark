@@ -21,15 +21,17 @@ int main(int argc, char *argv[])
 {
      int sockfd, newsockfd, portno;
      socklen_t clilen;
-     char buffer[256];
+    char *buffer;
+    unsigned size_buffer=1;
+
      struct sockaddr_in serv_addr, cli_addr;
      double result=0;
      int i,j,k;
     clock_t t1;  
     unsigned int N=1,M=1;
      int n;
-     if (argc < 3) {
-         fprintf(stderr,"Usage : ./server port matrix_width(sqrt(i*j+j*0.01)\n");
+     if (argc < 4) {
+         fprintf(stderr,"Usage : ./server port matrix_width(sqrt(i*j+j*0.01) size_buffer\n");
          exit(1);
      }
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,6 +41,12 @@ int main(int argc, char *argv[])
      portno = atoi(argv[1]);
      N = atoi(argv[2]);
      M = atoi(argv[2]);
+     size_buffer = atoi(argv[3]);
+    if(size_buffer<255){
+        printf("buffer size should be equal or larger than 255\n");    
+        return -1;
+    }
+    buffer = (char*) malloc(size_buffer);
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
      serv_addr.sin_port = htons(portno);
@@ -54,7 +62,7 @@ int main(int argc, char *argv[])
         if (newsockfd < 0) 
              error("ERROR on accept");
         bzero(buffer,256);
-        n = read(newsockfd,buffer,255);
+        n = read(newsockfd,buffer,size_buffer);
         t1 = clock();
         if (n < 0) error("ERROR reading from socket");
 
@@ -67,7 +75,7 @@ int main(int argc, char *argv[])
 
 
         printf("Here is the message: %s\n",buffer);
-        n = write(newsockfd,"I got your message",18);
+        n = write(newsockfd,"I got your message",255);
         if (n < 0) error("ERROR writing to socket");
         close(newsockfd);
     }while(0);
