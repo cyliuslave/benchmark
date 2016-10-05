@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
     for(int i=0; i<width; i++){
         for(int j=0; j<width; j++){
             for(int k=0; k<width; k++){
-                C[ i*width + j ] += A[ i*width + k ] * A[ k*width + j ] ;
+                C[ i*width + j ] += A[ i*width + k ] * B[ k*width + j ] ;
             }
         }
     }
