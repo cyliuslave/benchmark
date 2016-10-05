@@ -8,7 +8,7 @@ int main(int argc, char* argv[]){
     double res=0;
 
     if(argc<2){
-        printf("usage : ./sqrt n_loop\n");
+        printf("usage : ./compute n_loop\n");
     }
 
     n_loop = atoi(argv[1]);
