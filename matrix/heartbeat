@@ -1,0 +1,9 @@
+Running on: debian
+Start time: Thu Oct  6 12:55:45 2016
+Heartbeat time: Thu Oct  6 12:55:51 2016
+Stats since start:
+ 115 phases
+ 1150000 cycles
+ 191666 cycles/s
+Stats since last heartbeat (3s):
+ 383333 cycles/s
