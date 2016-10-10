@@ -9,6 +9,7 @@ int main(int argc, char* argv[]){
 
     if(argc<2){
         printf("usage : ./compute n_loop\n");
+        return -1;
     }
 
     n_loop = atoi(argv[1]);
